@@ -5,13 +5,33 @@ const Usuario = require('../models/usuario');
 const { generarJWT } = require('../helpers/jwt');
 
 
-const getUsuarios = async(req, res) => {
+const getUsuarios = async(req, res= response) => {
+    
+    const desde = Number(req.query.desde) || 0;
+
+    //*Esta opcion relantiza la ejecucion porq son dos promesas
     //el primer parametro de find es un filtro, y el segundo lo que queremos que retorne
-    const usuarios = await Usuario.find({}, 'nombre email role google');
+    // const usuarios = await Usuario
+    //                         .find({}, 'nombre email role google')
+    //                         .skip(desde)
+    //                         .limit(5);
+
+    // const totalUsuariosDB = await Usuario.countDocuments();
+    
+    //* Esta opcion mejora la ejecucion ya que se ejecutan de manera simultanea
+    const [usuarios, totalUsuariosDB] = await Promise.all([
+        Usuario
+            .find({}, 'nombre email role google img')
+            .skip(desde)
+            .limit(5),
+        Usuario.countDocuments()
+    ]);
+
 
     res.json({
         ok: true,
         usuarios,
+        totalUsuariosDB,
         uid: req.uid
     })
 };
@@ -61,7 +81,7 @@ const createUser = async(req, res = response) => {
 
 const editUsuario = async(req, res= response) => {
 
-    //TODO: Validar token y comprobar si es el usuario correcto
+    //* Validar token y comprobar si es el usuario correcto
     const uid = req.params.id;
     
     try {
