@@ -67,37 +67,27 @@ const createHospital = async(req, res = response) => {
 const editHospital = async(req, res= response) => {
 
     //* Validar token y comprobar si es el hospital correcto
-    const uid = req.params.id;
+    const id = req.params.id;
+    const uid = req.uid;
     
     try {
-        const hospitalDB= await Hospital.findById(uid);
-        console.log("uDB: ",hospitalDB);
+        const hospitalDB= await Hospital.findById(id);
+        //console.log("uDB: ",hospitalDB);
         if(!hospitalDB){
             return res.status(404).json({
                 ok: false,
-                msg: 'Hospital not found'
+                msg: 'Hospital not found by id'
             });
         }
 
         //Actualizaciones
-        const {password, google, email, ...campos} = req.body;
-        console.log("reqU", campos);
-
-        if(hospitalDB.email !== email) {
-            const existeEmail = await Hospital.findOne({email: email});
-            if(existeEmail){
-                return res.status(400).json({
-                    ok: false,
-                    msg: 'Ya existe un hospital con ese email',
-                    existeEmail //lo pongo por verlo
-                });
-            }
+        const cambiosHospital = {
+            ...req.body,
+            usuario: uid
         }
 
-        campos.email = email;
-
         //el parametro new: true, lo que hace es traer el hospital ya actualizado con los cambios
-        const hospitalActualizado = await Hospital.findByIdAndUpdate(uid, campos, {new: true});
+        const hospitalActualizado = await Hospital.findByIdAndUpdate(id, cambiosHospital, {new: true});
 
         res.json({
             ok: true,
@@ -115,21 +105,21 @@ const editHospital = async(req, res= response) => {
 
 const deleteHospital = async(req, res= response) => {
 
-    const uid= req.params.id;
+    const id= req.params.id;
     
     try {
 
-        const hospitalDB= await Hospital.findById(uid);
+        const hospitalDB= await Hospital.findById(id);
         console.log(hospitalDB);
         if(!hospitalDB){
-            console.log('entro al error no hay hospital con uid');
+            console.log('entro al error no hay hospital con id');
             return res.status(404).json({
                 ok: false,
-                msg: 'No existe un hospital con ese uid'
+                msg: 'No existe un hospital con ese id'
             });
         }
 
-        await Hospital.findByIdAndDelete(uid);
+        await Hospital.findByIdAndDelete(id);
         
         res.json({
             ok: true,

@@ -67,42 +67,32 @@ const createMedico = async(req, res = response) => {
 
 const editMedico = async(req, res= response) => {
 
-    //* Validar token y comprobar si es el Medico correcto
-    const uid = req.params.id;
+    //* Validar token y comprobar si es el medico es correcto
+    const id = req.params.id;
+    const uid = req.uid;
     
     try {
-        const medicoDB= await Medico.findById(uid);
-        console.log("uDB: ", medicoDB);
+        const medicoDB= await Medico.findById(id);
+        //console.log("uDB: ",medicoDB);
         if(!medicoDB){
             return res.status(404).json({
                 ok: false,
-                msg: 'Medico not found'
+                msg: 'Medico not found by id'
             });
         }
 
         //Actualizaciones
-        const {password, google, email, ...campos} = req.body;
-        console.log("reqU", campos);
-
-        if(medicoDB.email !== email) {
-            const existeEmail = await Medico.findOne({email: email});
-            if(existeEmail){
-                return res.status(400).json({
-                    ok: false,
-                    msg: 'Ya existe un medico con ese email',
-                    existeEmail //lo pongo por verlo
-                });
-            }
+        const cambiosMedico = {
+            ...req.body,
+            usuario: uid
         }
 
-        campos.email = email;
-
-        //el parametro new: true, lo que hace es traer el Medico ya actualizado con los cambios
-        const medicoActualizado = await Medico.findByIdAndUpdate(uid, campos, {new: true});
+        //el parametro new: true, lo que hace es traer el medico ya actualizado con los cambios
+        const medicoActualizado = await Medico.findByIdAndUpdate(id, cambiosMedico, {new: true});
 
         res.json({
             ok: true,
-            Medico: medicoActualizado
+            medico: medicoActualizado
         });
         
     } catch (error) {
@@ -116,21 +106,21 @@ const editMedico = async(req, res= response) => {
 
 const deleteMedico = async(req, res= response) => {
 
-    const uid= req.params.id;
+    const id= req.params.id;
     
     try {
 
-        const MedicoDB= await Medico.findById(uid);
-        console.log(medicoDB);
+        const medicoDB= await Medico.findById(id);
+
         if(!medicoDB){
-            console.log('entro al error no hay medico con uid');
+            console.log('entro al error no hay medico con id');
             return res.status(404).json({
                 ok: false,
-                msg: 'No existe un medico con ese uid'
+                msg: 'No existe un medico con ese id'
             });
         }
 
-        await Medico.findByIdAndDelete(uid);
+        await Medico.findByIdAndDelete(id);
         
         res.json({
             ok: true,
